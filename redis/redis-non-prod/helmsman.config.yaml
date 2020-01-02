@@ -1,0 +1,11 @@
+namespaces:
+  redis:
+
+apps:
+  redis:
+    enabled: true
+    namespace: "redis"
+    chart: "stable/redis"
+    valuesFiles: ["values.yaml"]
+    version: "10.3.0"
+    purge: true

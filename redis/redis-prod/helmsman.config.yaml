@@ -1,0 +1,10 @@
+namespaces:
+  redis:
+
+apps:
+  redis-remote:
+    enabled: true
+    namespace: "redis"
+    chart: "./"
+    version: "0.1.0"
+    purge: true
