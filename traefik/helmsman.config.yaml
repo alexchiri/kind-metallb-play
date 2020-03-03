@@ -1,0 +1,25 @@
+namespaces:
+  default:
+
+helmRepos:
+  jaegertracing: "https://jaegertracing.github.io/helm-charts"
+  bitnami: https://charts.bitnami.com/bitnami
+
+apps:
+  apache:
+    enabled: true
+    namespace: "default"
+    chart: "bitnami/apache"
+    valuesFiles: ["apache-values.yaml"]
+    version: "7.3.7"
+  traefik:
+    enabled: true
+    namespace: "default"
+    chart: "./"
+    version: "1.0.0"
+  jaeger:
+    enabled: true
+    namespace: "default"
+    chart: "jaegertracing/jaeger-operator"
+    valuesFiles: ["jaeger-values.yaml"]
+    version: "2.12.4"

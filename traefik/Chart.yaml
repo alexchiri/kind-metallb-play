@@ -1,0 +1,7 @@
+apiVersion: v1
+name: traefik 
+
+version: 1.0.0 
+description: Setups trafik to handle canary deploys.
+keywords:
+  - traefik

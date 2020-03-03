@@ -1,0 +1,12 @@
+## Service paramaters
+##
+service:
+  ## Service type
+  ##
+  type: ClusterIP
+  ## HTTP Port
+  ##
+  port: 80
+  ## HTTPS Port
+  ##
+  httpsPort: 443

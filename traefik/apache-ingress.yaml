@@ -1,0 +1,14 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: apache
+  namespace: default
+spec:
+  entrypoints:
+    - web
+  routes:
+    - match: Host(`172.17.255.1.nip.io`)
+      kind: Rule
+      services:
+        - name: apache
+          port: 80

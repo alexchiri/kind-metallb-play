@@ -1,0 +1,73 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: default
+  name: traefik-web
+  labels:
+    app: traefik-web
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: traefik-web
+  template:
+    metadata:
+      labels:
+        app: traefik-web
+    spec:
+      serviceAccountName: traefik-web-ingress-controller
+      containers:
+        - name: traefik-web
+          image: traefik:v2.1
+          args:
+            - --entrypoints.web.Address=:80
+            - --entrypoints.websecure.Address=:443
+            - --entryPoints.traefik.address=:8080
+#            - --entryPoints.redis.address=:6379
+            - --providers.kubernetescrd
+            - "--providers.kubernetescrd.namespaces=default"
+            - --api.dashboard=true
+            - --api.insecure=true
+            - --ping=true
+            - --tracing.jaeger=true
+            - --tracing.jaeger.samplingServerURL=http://jaeger-jaeger-operator-jaeger-agent.default.svc.cluster.local:5778/sampling
+            - --tracing.jaeger.samplingType=const
+            - --tracing.jaeger.samplingParam=1.0
+            - --tracing.jaeger.localAgentHostPort=jaeger-jaeger-operator-jaeger-agent.default.svc.cluster.local:6831
+            - --tracing.jaeger.gen128Bit
+            - --tracing.jaeger.propagation=jaeger
+            - --tracing.jaeger.traceContextHeaderName=uber-trace-id
+            - --tracing.jaeger.collector.endpoint=http://jaeger-jaeger-operator-jaeger-collector.default.svc.cluster.local:14268/api/traces?format=jaeger.thrift
+          env:
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+          ports:
+            - name: web
+              containerPort: 80
+            - name: websecure
+              containerPort: 443
+            - name: admin
+              containerPort: 8080
+
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: admin
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: admin
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2

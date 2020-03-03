@@ -1,3 +1,5 @@
+## Redis and metallb play on kind
+
 Plan:
 * create a cluster using K8s and deploy in it helm/tiller
 * find an implementation of a LoadBalancer that you can use in a local implementation - how about metallb? - https://mauilion.dev/posts/kind-metallb/
@@ -18,6 +20,7 @@ Install:
 * Install redis-cli only by building it from source: https://codewithhugo.com/install-just-redis-cli-on-ubuntu-debian-jessie/
 
 Steps:
+* Create the cluster using kind: `kind create cluster --image "kindest/node:v1.16.4" --config kind-config.yaml --name traefik-play`
 * Determine the network used for the node IP pool - `docker network inspect bridge | jid` and go to `.[0].IPAM` and in my case it will be `172.17.0.0/16`
 * Install a service like echo service - `kubectl run echo --image=inanimate/echo-server --replicas=3 --port=8080`
 * Expose the service as LoadBalancer: `kubectl expose deployment echo --type=LoadBalancer`
@@ -35,3 +38,21 @@ Non-prod:
 
 Prod:
 Just create a headless service and use an Endpoints resource to point to the remote one.
+
+## Traefik and jaeger play on Kind
+
+Plan: 
+* Deploy Traefik 2.1 using yaml templates to the cluster
+* Deploy Jaeger using the helm chart
+* Deploy the echo service and create an IngressRoute for it
+* Run Fortio
+* Redeploy Traefik to send tracing to Jaeger and see if there are any connections dropped
+
+Steps:
+* Same cluster and metallb deployment as previously
+* Apply Traefik CRDS `kubectl apply -f traefik-crds.yaml`
+* Deploy the whole thing using `helmsman -apply -f helmsman.config.yaml`
+* Apply the apache service IngressRoute `kubectl apply -f apache-ingress.yaml`
+* Test load using Fortio `fortio load -a -c 8 -qps 500 -t 240s "http://172.17.255.1.nip.io/"`
+
+Unfortunately, there are some `Unable to connect to 172.17.255.1:80 : dial tcp 172.17.255.1:80: connect: connection refused` and what worked to fix this is to increase the `successThreshold` of the readinessProbe to `5`. I tried adding a startupProbe instead, but that didn't work as well. (I tried only once for each case, so..., it depends, but I think the successThreshold way seems more sturdy)
