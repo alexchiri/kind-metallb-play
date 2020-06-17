@@ -24,7 +24,13 @@ Steps:
 * Determine the network used for the node IP pool - `docker network inspect bridge | jid` and go to `.[0].IPAM` and in my case it will be `172.17.0.0/16`
 * Install a service like echo service - `kubectl run echo --image=inanimate/echo-server --replicas=3 --port=8080`
 * Expose the service as LoadBalancer: `kubectl expose deployment echo --type=LoadBalancer`
-* Deploy metallb - https://metallb.universe.tf/installation/ - `kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.8.3/manifests/metallb.yaml`
+* Deploy metallb - https://metallb.universe.tf/installation/ - 
+```
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+# On first install only
+kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+```
 * Apply the `metallb-config.yaml` and check that an IP is assigned to the echo service.
 * Create serviceaccount for tiller: `kubectl create serviceaccount -n kube-system tiller` - https://github.com/helm/helm/issues/5100
 * Create clusterrole binding between the clusterrole `cluster-admin` and serviceaccount `tiller`: `kubectl create clusterrolebinding tiller-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:tiller`
